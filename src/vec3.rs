@@ -2,7 +2,7 @@ use std::ops::{Add, AddAssign};
 use std::ops::{Sub,SubAssign};
 use std::ops::{Mul,MulAssign};
 use std::ops::{Div,DivAssign};
-use std::ops::{Neg};
+use std::ops::Neg;
 #[derive(Clone, Debug, PartialEq)]
 pub struct Vec3 {
     pub x: f64,
