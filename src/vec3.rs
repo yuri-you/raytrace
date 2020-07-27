@@ -9,7 +9,6 @@ pub struct Vec3 {
     pub y: f64,
     pub z: f64,
 }
-
 impl Vec3 {
     pub fn new(x: f64, y: f64, z: f64) -> Self {
         Self { x, y, z }
@@ -163,6 +162,16 @@ impl Mul<f64> for Vec3 {
             x: self.x * other,
             y: self.y * other,
             z: self.z * other,
+        }
+    }
+}
+impl Mul<Vec3> for f64{
+    type Output = Vec3;
+    fn mul(self, other: Vec3)->Vec3{
+        Vec3{
+            x: self * other.x,
+            y: self * other.y,
+            z: self * other.z,
         }
     }
 }
