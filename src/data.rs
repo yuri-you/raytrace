@@ -1,8 +1,8 @@
-pub static Infinity:f64 = 0xffffff as f64;
+pub static Infinity:f64 = 0xfffffff as f64;
 // pub static pi:f64= 3.1415926535897932385;
-// pub fn degrees_to_radians(degrees:f64)->f64{
-//     degrees * pi.clone() / 180.0
-// }
+pub fn degrees_to_radians(degrees:f64)->f64{
+    degrees * std::f64::consts::PI / 180.0
+}
 // #[derive(Clone, Debug, PartialEq)]
 // pub struct Rand{
 //     seed:i64,
@@ -27,3 +27,11 @@ pub static Infinity:f64 = 0xffffff as f64;
 //         (tmp as f64)/(((*self).md-1) as f64)
 //     }
 // }
+pub use rand::prelude::*;
+pub fn rand_double()->f64{
+    let y:f64=rand::random::<f64>();
+    y
+}
+pub fn rand_range(min:f64,max:f64)->f64{
+    min+(max-min)*rand_double()
+}

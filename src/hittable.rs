@@ -1,11 +1,14 @@
 use crate::vec3::Vec3;
 use crate::ray::Ray;
 use crate::sphere::Sphere;
-#[derive(Clone, Debug, PartialEq)]
+use crate::material::Material;
+use std::sync::Arc;
+#[derive(Clone, Debug)]
 pub struct HitRecord{
     pub p:Vec3,
     pub normal:Vec3,
     pub t:f64,
+    pub ptr:Option<Arc<dyn Material>>,
     pub front_face:bool,
 }
 impl HitRecord{
@@ -14,6 +17,7 @@ impl HitRecord{
             p:Vec3::new(0.0,0.0,0.0),
             normal:Vec3::new(0.0,0.0,0.0),
             t:0.0,
+            ptr:None,
             front_face:false,
         }
     }
@@ -25,7 +29,7 @@ impl HitRecord{
 pub trait Hittable{
     fn hit(&mut self,r:&Ray, t_min:f64, t_max:f64, rec:&mut HitRecord)->bool;
 }
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug)]
 pub struct HitList{
     pub ptr:Vec<Sphere>,
 }

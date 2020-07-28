@@ -3,17 +3,84 @@ use std::ops::{Add, AddAssign};
 use std::ops::{Div, DivAssign};
 use std::ops::{Mul, MulAssign};
 use std::ops::{Sub, SubAssign};
+pub use rand::prelude::*;
+use crate::data::rand_range;
 #[derive(Clone, Debug, PartialEq)]
 pub struct Vec3 {
     pub x: f64,
     pub y: f64,
     pub z: f64,
 }
+pub fn reflect(v:&Vec3, n:&Vec3) ->Vec3{
+    return (*v).clone() - 2.0*((*v).clone()*(*n).clone())*((*n).clone());
+}
+pub fn refract(uv:&Vec3, n:&Vec3, etai_over_etat:f64)->Vec3 {
+    let cos_theta = (-(*uv).clone())*(*n).clone();
+    let r_out_perp =  etai_over_etat * ((*uv).clone() + cos_theta*(*n).clone());
+    let r_out_parallel = -(1.0 - r_out_perp.clone().squared_length()).abs().sqrt() * (*n).clone();
+    return r_out_perp + r_out_parallel;
+}
+pub fn random_in_unit_sphere()->Vec3 {
+    loop {
+        let p = Vec3::rand_range(-1.0,1.0);
+        if p.clone().squared_length() < 1.0 {return p;}
+    }
+}
+pub fn random_in_hemisphere(normal:&Vec3)->Vec3 {
+    let in_unit_sphere = random_in_unit_sphere();
+    if in_unit_sphere.clone()* (*normal).clone() > 0.0{ // In the same hemisphere as the normal
+        return in_unit_sphere;
+    }
+    else{
+        return -in_unit_sphere;
+    }
+}
+pub fn random_unit_sphere()->Vec3 {
+    let a = rand_range(0.0,2.0 *std::f64::consts::PI );
+    let z = rand_range(-1.0,1.0);
+    let r = (1.0 - z * z).sqrt();
+    return Vec3::new(r * a.cos(), r *a.sin(), z);
+}
+pub fn random_in_unit_disk()->Vec3 {
+    loop {
+        let p = Vec3::new(rand_range(-1.0,1.0), rand_range(-1.0,1.0), 0.0);
+        if p.squared_length() < 1.0{
+        return p;
+        }
+    }
+}
 impl Vec3 {
+    pub fn rand_double()->Self{
+        let x1:f64=rand::random::<f64>();
+        let y1:f64=rand::random::<f64>();
+        let z1:f64=rand::random::<f64>();
+        Self{
+            x:x1,
+            y:y1,
+            z:z1,
+        }
+    }
+    pub fn rand_range(min:f64,max:f64)->Self{
+        let x1:f64=rand::random::<f64>();
+        let y1:f64=rand::random::<f64>();
+        let z1:f64=rand::random::<f64>();
+        Self{
+            x:min+(max-min)*x1,
+            y:min+(max-min)*y1,
+            z:min+(max-min)*z1,
+        }
+    }
+
     pub fn new(x: f64, y: f64, z: f64) -> Self {
         Self { x, y, z }
     }
-
+    pub fn new1()->Self{
+        Self{
+            x:0.0,
+            y:0.0,
+            z:0.0,
+        }
+    }
     pub fn ones() -> Self {
         Self::new(1.0, 1.0, 1.0)
     }

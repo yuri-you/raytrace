@@ -2,14 +2,24 @@ use crate::vec3::Vec3;
 use crate::hittable::Hittable;
 use crate::hittable::HitRecord;
 use crate::ray::Ray;
-#[derive(Clone, Debug, PartialEq)]
+use crate::material::Material;
+use std::sync::Arc;
+#[derive(Clone, Debug)]
 pub struct Sphere{
     pub center:Vec3,
     pub radius:f64,
+    pub ptr:Option<Arc<dyn Material>>,
 }
 impl Sphere{
-    pub fn new(center:Vec3,radius:f64)->Self{
-        Self{center,radius}
+    pub fn new(center:Vec3,radius:f64,ptr:Option<Arc<dyn Material>>)->Self{
+        Self{center,radius,ptr,}
+    }
+    pub fn new1()->Self{
+        Self{
+        center: Vec3::new1(),
+        radius:0.0,
+        ptr:None,
+        }
     }
 }
 impl Hittable for Sphere{
@@ -27,7 +37,8 @@ impl Hittable for Sphere{
             (*rec).t = temp;
             (*rec).p = (*r).clone().at(rec.t);
             let outward_normal:Vec3 = (rec.clone().p - (*self).clone().center) / (*self).clone().radius;
-            rec.set_face_normal(r, &outward_normal);
+            (*rec).set_face_normal(r, &outward_normal);
+            (*rec).ptr = (*self).ptr.clone();
             return true;
         }
         temp = (-half_b + root) / a;
@@ -35,7 +46,8 @@ impl Hittable for Sphere{
             (*rec).t = temp;
             (*rec).p = (*r).clone().at(rec.t);
             let outward_normal:Vec3 = ((*rec).clone().p - (*self).clone().center) / (*self).clone().radius;
-            rec.set_face_normal(r, &outward_normal);
+            (*rec).set_face_normal(r, &outward_normal);
+            (*rec).ptr = (*self).ptr.clone();
             return true;
         }
     }
