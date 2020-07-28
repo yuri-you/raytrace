@@ -5,7 +5,10 @@ mod color;
 mod sphere;
 mod hittable;
 mod data;
+mod aabb;
+mod moving_sphere;
 mod material;
+mod bvh;
 mod camera;
 use image::{ImageBuffer, RgbImage};
 use indicatif::ProgressBar;
@@ -15,6 +18,7 @@ pub use color::write_color;
 pub use color::ray_color;
 pub use color::Color;
 pub use sphere::Sphere;
+pub use hittable::Hittable;
 pub use hittable::HitList;
 pub use camera::Camera;
 pub use data::rand_double;
@@ -23,11 +27,13 @@ pub use material::lambertian;
 pub use material::metal;
 pub use material::Material;
 pub use material::dielectric;
+pub use moving_sphere::Moving_Sphere;
 use std::sync::Arc;
 pub fn random_scene()->HitList {
     let mut world=HitList::new();
     let ground_material = lambertian::new(&Vec3::new(0.5, 0.5, 0.5));
-    world.add(&Sphere::new(Vec3::new(0.0, -1000.0, 0.0), 1000.0,Some(Arc::new(ground_material))));
+    let sph1=Sphere::new(Vec3::new(0.0, -1000.0, 0.0),1000.0,Some(Arc::new(ground_material)));
+    world.add(Some(Arc::new(sph1)));
     let mut a=-11;
     let mut b=-11;
     while a<11 {
@@ -40,17 +46,23 @@ pub fn random_scene()->HitList {
                     // diffuse
                     let albedo = Vec3::rand_double().elemul(Vec3::rand_double());
                     let sphere_material=lambertian::new(&albedo);   
-                    world.add(&Sphere::new(center.clone(), 0.2,Some(Arc::new(sphere_material))));
+                    let center2 = center.clone() + Vec3::new(0.0, rand_range(0.0,0.5), 0.0);
+                    // world.add(make_shared<moving_sphere>(
+                    //     center, center2, 0.0, 1.0, 0.2, sphere_material));
+                    let sph1=Moving_Sphere::new(center.clone(),center2.clone(),0.0,1.0, 0.2,Some(Arc::new(sphere_material)));
+                    world.add(Some(Arc::new(sph1)));
                 } else if choose_mat < 0.95 {
                     // metal
                     let albedo = Vec3::rand_range(0.5, 1.0);
                     let fuzz = rand_range(0.0, 0.5);
                     let sphere_material = metal::new(&albedo, fuzz);
-                    world.add(&Sphere::new(center, 0.2,Some(Arc::new(sphere_material))));
+                    let sph1=Sphere::new(center,0.2,Some(Arc::new(sphere_material)));
+                    world.add(Some(Arc::new(sph1)));
                 } else {
                     // glass
                     let sphere_material = dielectric::new(1.5);
-                    world.add(&Sphere::new(center, 0.2,Some(Arc::new(sphere_material))));
+                    let sph1=Sphere::new(center,0.2,Some(Arc::new(sphere_material)));
+                    world.add(Some(Arc::new(sph1)));
                 }
             }
             b+=1;
@@ -59,13 +71,16 @@ pub fn random_scene()->HitList {
     }
 
     let material1 = dielectric::new(1.5);
-    world.add(&Sphere::new(Vec3::new(0.0,1.0,0.0), 1.0,Some(Arc::new(material1))));
+    let sph1=Sphere::new(Vec3::new(0.0,1.0,0.0),1.0,Some(Arc::new(material1)));
+    world.add(Some(Arc::new(sph1)));
 
     let material2 = lambertian::new(&Vec3::new(0.4, 0.2, 0.1));
-    world.add(&Sphere::new(Vec3::new(-4.0,1.0,0.0), 1.0,Some(Arc::new(material2))));
+    let sph2=Sphere::new(Vec3::new(-4.0,1.0,0.0),1.0,Some(Arc::new(material2)));
+    world.add(Some(Arc::new(sph2)));
 
     let material3 = metal::new(&Vec3::new(0.7, 0.6, 0.5),0.0);
-    world.add(&Sphere::new(Vec3::new(4.0,1.0,0.0), 1.0,Some(Arc::new(material3))));
+    let sph3=Sphere::new(Vec3::new(4.0,1.0,0.0),1.0,Some(Arc::new(material3)));
+    world.add(Some(Arc::new(sph3)));
 
     // let material4=metal::new(&Vec3::new(0.6, 0.5, 0.6),0.0);
     // world.add(&Sphere::new(Vec3::new(0.0,-1.0,0.0), 0.7,Some(Arc::new(material4))));
@@ -73,14 +88,14 @@ pub fn random_scene()->HitList {
 }
 fn main() {
     
-    let x = Vec3::new(1.0, 1.0, 1.0);
-    println!("{:?}", x);
+    // let x = Vec3::new(1.0, 1.0, 1.0);
+    // println!("{:?}", x);
     let mut img: RgbImage = ImageBuffer::new(1024, 512);
-    let aspect_ratio = 3.0 / 2.0;
+    let aspect_ratio = 2.0;
     let image_width = 1024;
     let image_height=512;
     let bar = ProgressBar::new(1024);
-    let sample_per_pixel:i32=500;
+    let sample_per_pixel:i32=100;
     let max_depth=50;
     //initialize
 
@@ -102,7 +117,7 @@ fn main() {
     let dist_to_focus = 10.0;
     let aperture = 0.1;
     
-    let cam=Camera::new(lookfrom, lookat, vup, 20.0, aspect_ratio, aperture, dist_to_focus);
+    let cam=Camera::new(lookfrom, lookat, vup, 20.0, aspect_ratio, aperture, dist_to_focus,0.0,1.0);
     let mut u:f64;
     let mut v:f64;
     // let mut random=Rand::new(14846);
@@ -124,7 +139,7 @@ fn main() {
         bar.inc(1);
     }
 
-    img.save("output/test1.png").unwrap();
+    img.save("output/test2.png").unwrap();
     bar.finish();
 }
     //

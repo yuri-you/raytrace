@@ -70,7 +70,12 @@ impl Vec3 {
             z:min+(max-min)*z1,
         }
     }
-
+    pub fn in_at(&self,a:i32)->f64{
+        let b=(*self).clone();
+        if a==0{return b.x;}
+        else if a==1{return b.y;}
+        else {return b.z};
+    }
     pub fn new(x: f64, y: f64, z: f64) -> Self {
         Self { x, y, z }
     }

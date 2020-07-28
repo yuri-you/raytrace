@@ -24,7 +24,7 @@ pub struct lambertian{
 impl Material for lambertian{
     fn scatter(&self,r_in:&Ray,rec:&HitRecord , attenuation:&mut Vec3 ,scattered:&mut Ray)->bool{
         let scatter_direction = (*rec).normal.clone() + random_unit_sphere();
-        (*scattered) = Ray::new((*rec).p.clone(), scatter_direction);
+        (*scattered) = Ray::new((*rec).p.clone(), scatter_direction,(*r_in).time.clone());
         (*attenuation) = (*self).albedo.clone();
         return true;
     }
@@ -42,7 +42,7 @@ pub struct metal{
 impl Material for metal{
     fn scatter(&self,r_in:&Ray,rec:&HitRecord , attenuation:&mut Vec3 ,scattered:&mut Ray)->bool{
         let reflected = reflect(&(r_in.direction.clone().unit()), &(*rec).normal.clone());
-        (*scattered) = Ray::new((*rec).p.clone(), reflected + self.fuzz * random_in_unit_sphere());
+        (*scattered) = Ray::new((*rec).p.clone(), reflected + self.fuzz * random_in_unit_sphere(),0.0);
         (*attenuation) = self.albedo.clone();
         return scattered.clone().direction*((*rec).normal.clone()) > 0.0;
     }
@@ -68,18 +68,18 @@ impl Material for dielectric{
         let sin_theta = (1.0 - cos_theta * cos_theta).sqrt();
         if etai_over_etat * sin_theta > 1.0 {
             let reflected = reflect(&unit_direction, &rec.normal);
-            (*scattered) = Ray::new((*rec).clone().p, reflected);
+            (*scattered) = Ray::new((*rec).clone().p, reflected,0.0);
             return true;
         }
         let reflect_prob = schlick(cos_theta, etai_over_etat);
         if rand_double() < reflect_prob
         {
             let reflected = reflect(&unit_direction, &(*rec).clone().normal);
-            (*scattered) = Ray::new((*rec).clone().p, reflected);
+            (*scattered) = Ray::new((*rec).clone().p, reflected,0.0);
             return true;
         }
         let refracted = refract(&unit_direction, &rec.normal, etai_over_etat);
-        (*scattered) = Ray::new((*rec).clone().p, refracted);
+        (*scattered) = Ray::new((*rec).clone().p, refracted,0.0);
         return true;
     }
 }

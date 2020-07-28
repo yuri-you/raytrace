@@ -1,6 +1,8 @@
 use crate::vec3::Vec3;
 use crate::ray::Ray;
 use crate::data::degrees_to_radians;
+use crate::vec3::random_in_unit_disk;
+use crate::data::rand_range;
 #[derive(Clone, Debug, PartialEq)]
 pub struct Camera{
     origin:Vec3,
@@ -11,9 +13,11 @@ pub struct Camera{
     v:Vec3,
     w:Vec3,
     lens_radius:f64,
+    t0:f64,
+    t1:f64
 }
 impl Camera{
-    pub fn new( lookfrom:Vec3,lookat:Vec3,vup:Vec3,vfov:f64,aspect_ratio:f64,aperture:f64, focus_dist:f64)->Self{
+    pub fn new( lookfrom:Vec3,lookat:Vec3,vup:Vec3,vfov:f64,aspect_ratio:f64,aperture:f64, focus_dist:f64,t0:f64,t1:f64)->Self{
             let theta = degrees_to_radians(vfov);
             let h = (theta / 2.0).tan();
             let viewport_height:f64 = 2.0 * h;
@@ -34,9 +38,14 @@ impl Camera{
             v:v1,
             w:w1,
             lens_radius : aperture / 2.0,
+            t0,
+            t1,
             }
     }
-    pub fn get_ray(&self,u:f64,v:f64)->Ray{
-        Ray::new((*self).clone().origin, (*self).clone().lower_left_corner + u * (*self).clone().horizontal + v * (*self).clone().vertical - (*self).clone().origin)
+    pub fn get_ray(&self,s:f64,t:f64)->Ray{
+        let rd = (*self).lens_radius.clone() * random_in_unit_disk();
+        let offset = (*self).u.clone() * rd.x.clone() + (*self).v.clone() * rd.y.clone();
+        Ray::new((*self).clone().origin+offset.clone(), (*self).clone().lower_left_corner + s * (*self).clone().horizontal + t * (*self).clone().vertical - (*self).clone().origin-offset.clone(),
+        rand_range((*self).t0.clone(),(*self).t1.clone()))
     }
 }

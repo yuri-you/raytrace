@@ -3,6 +3,7 @@ use crate::hittable::Hittable;
 use crate::hittable::HitRecord;
 use crate::ray::Ray;
 use crate::material::Material;
+use crate::aabb::AABB;
 use std::sync::Arc;
 #[derive(Clone, Debug)]
 pub struct Sphere{
@@ -20,6 +21,13 @@ impl Sphere{
         radius:0.0,
         ptr:None,
         }
+    }
+    pub fn bounding_box(&self,t0:f64, t1:f64,output_box:&mut AABB) ->bool {
+        let tmp=(*self).clone();
+        (*output_box) = AABB::new(
+            &(tmp.center.clone() - Vec3::new(tmp.radius.clone(), tmp.radius.clone(), tmp.radius.clone())),
+            &(tmp.center.clone() + Vec3::new(tmp.radius.clone(), tmp.radius.clone(), tmp.radius.clone())));
+        return true;
     }
 }
 impl Hittable for Sphere{
