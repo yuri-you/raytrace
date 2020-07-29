@@ -5,7 +5,13 @@ use crate::ray::Ray;
 use crate::material::Material;
 use crate::aabb::AABB;
 use std::sync::Arc;
-#[derive(Clone, Debug)]
+pub fn get_sphere_uv(p:&Vec3, u:&mut f64, v:&mut f64) {
+    let phi = (p.z/p.x).atan();
+    let theta = p.y.asin();
+    *u = 1.0 - (phi + std::f64::consts::PI) / (2.0 * std::f64::consts::PI);
+    *v = (theta + std::f64::consts::PI / 2.0) / (std::f64::consts::PI);
+}
+#[derive(Clone)]
 pub struct Sphere{
     pub center:Vec3,
     pub radius:f64,
@@ -22,16 +28,10 @@ impl Sphere{
         ptr:None,
         }
     }
-    pub fn bounding_box(&self,t0:f64, t1:f64,output_box:&mut AABB) ->bool {
-        let tmp=(*self).clone();
-        (*output_box) = AABB::new(
-            &(tmp.center.clone() - Vec3::new(tmp.radius.clone(), tmp.radius.clone(), tmp.radius.clone())),
-            &(tmp.center.clone() + Vec3::new(tmp.radius.clone(), tmp.radius.clone(), tmp.radius.clone())));
-        return true;
-    }
+
 }
 impl Hittable for Sphere{
-    fn hit(&mut self,r:&Ray, t_min:f64, t_max:f64, rec:&mut HitRecord)->bool{
+    fn hit(&self,r:&Ray, t_min:f64, t_max:f64, rec:&mut HitRecord)->bool{
     let oc = (*r).position.clone() - (*self).clone().center;
     let dir=(*r).direction.clone();
     let a = dir.squared_length();
@@ -44,8 +44,9 @@ impl Hittable for Sphere{
         if temp < t_max && temp > t_min {
             (*rec).t = temp;
             (*rec).p = (*r).clone().at(rec.t);
-            let outward_normal:Vec3 = (rec.clone().p - (*self).clone().center) / (*self).clone().radius;
+            let outward_normal:Vec3 = ((*rec).clone().p - (*self).clone().center) / (*self).clone().radius;
             (*rec).set_face_normal(r, &outward_normal);
+            get_sphere_uv(&(((*rec).clone().p-(*self).center.clone())/(*self).clone().radius), &mut (*rec).u, &mut (*rec).v);
             (*rec).ptr = (*self).ptr.clone();
             return true;
         }
@@ -60,5 +61,12 @@ impl Hittable for Sphere{
         }
     }
     return false;
+    }
+    fn bounding_box(&self,t0:f64, t1:f64,output_box:&mut AABB) ->bool {
+        let tmp=(*self).clone();
+        (*output_box) = AABB::new(
+            &(tmp.center.clone() - Vec3::new(tmp.radius.clone(), tmp.radius.clone(), tmp.radius.clone())),
+            &(tmp.center.clone() + Vec3::new(tmp.radius.clone(), tmp.radius.clone(), tmp.radius.clone())));
+        return true;
     }
 }

@@ -6,7 +6,7 @@ use crate::material::Material;
 use std::sync::Arc;
 use crate::aabb::surrounding_box;
 use crate::aabb::AABB;
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct Moving_Sphere{
     pub center0:Vec3,
     pub center1:Vec3,
@@ -29,23 +29,12 @@ impl Moving_Sphere{
         t1:0.0,
         }
     }
-    pub fn bounding_box(&self,t0:f64, t1:f64,output_box:&mut AABB) ->bool {
-        let tmp=(*self).clone();
-        let box0 = AABB::new(
-            &(tmp.center(t0).clone() - Vec3::new(tmp.radius.clone(), tmp.radius.clone(), tmp.radius.clone())),
-            &(tmp.center(t0).clone() + Vec3::new(tmp.radius.clone(), tmp.radius.clone(), tmp.radius.clone())));
-        let box1 = AABB::new(
-            &(tmp.center(t1).clone() - Vec3::new(tmp.radius.clone(), tmp.radius.clone(), tmp.radius.clone())),
-            &(tmp.center(t1).clone() + Vec3::new(tmp.radius.clone(), tmp.radius.clone(), tmp.radius.clone())));
-        (*output_box)=surrounding_box(&box0, &box1);
-        return true;
-    }
-    pub fn center(&self,time:f64) ->Vec3 {
-        (*self).clone().center0 + ((time - (*self).clone().t0) / ((*self).clone().t1 - (*self).clone().t0))*((*self).clone().center1 - (*self).clone().center0)
+    pub fn center(&self,t0:f64)->Vec3{
+        (*self).center0.clone() + ((t0 - (*self).t0.clone()) / ((*self).t1.clone() - (*self).t0.clone())) * ((*self).center1.clone() - (*self).center0.clone())
     }
 }
 impl Hittable for Moving_Sphere{
-    fn hit(&mut self,r:&Ray, t_min:f64, t_max:f64, rec:&mut HitRecord)->bool{
+    fn hit(&self,r:&Ray, t_min:f64, t_max:f64, rec:&mut HitRecord)->bool{
     let oc = (*r).position.clone() - (*self).clone().center((*r).time.clone());
     let dir=(*r).direction.clone();
     let a = dir.squared_length();
@@ -74,5 +63,16 @@ impl Hittable for Moving_Sphere{
         }
     }
     return false;
+    }
+    fn bounding_box(&self,t0:f64, t1:f64,output_box:&mut AABB) ->bool {
+        let tmp=(*self).clone();
+        let box0 = AABB::new(
+            &(tmp.center(t0).clone() - Vec3::new(tmp.radius.clone(), tmp.radius.clone(), tmp.radius.clone())),
+            &(tmp.center(t0).clone() + Vec3::new(tmp.radius.clone(), tmp.radius.clone(), tmp.radius.clone())));
+        let box1 = AABB::new(
+            &(tmp.center(t1).clone() - Vec3::new(tmp.radius.clone(), tmp.radius.clone(), tmp.radius.clone())),
+            &(tmp.center(t1).clone() + Vec3::new(tmp.radius.clone(), tmp.radius.clone(), tmp.radius.clone())));
+        (*output_box)=surrounding_box(&box0, &box1);
+        return true;
     }
 }

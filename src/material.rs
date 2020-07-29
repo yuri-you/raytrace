@@ -6,7 +6,10 @@ use crate::vec3::random_in_unit_sphere;
 use crate::vec3::reflect;
 use crate::vec3::refract;
 use crate::data::rand_double;
-pub trait Material : std::fmt::Debug{
+use crate::texture::texture;
+use crate::texture::solid_color;
+use std::sync::Arc;
+pub trait Material {
     fn scatter(&self,r_in:&Ray,rec:&HitRecord , attenuation:&mut Vec3 ,scattered:&mut Ray)->bool;
 }
 pub fn fmin(a:f64,b:f64)->f64{
@@ -17,22 +20,23 @@ pub fn schlick(cosine:f64, ref_idx:f64)->f64 {
     r0 = r0*r0;
     return r0 + (1.0-r0)*((1.0 - cosine).powf(5.0));
 }
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone)]
 pub struct lambertian{
-    albedo:Vec3,
+    albedo:Option<Arc<dyn texture>>,
 }
 impl Material for lambertian{
     fn scatter(&self,r_in:&Ray,rec:&HitRecord , attenuation:&mut Vec3 ,scattered:&mut Ray)->bool{
         let scatter_direction = (*rec).normal.clone() + random_unit_sphere();
         (*scattered) = Ray::new((*rec).p.clone(), scatter_direction,(*r_in).time.clone());
-        (*attenuation) = (*self).albedo.clone();
+        (*attenuation) = (*self).clone().albedo.unwrap().value((*rec).u.clone(),(*rec).v.clone(),&(*rec).p.clone());
         return true;
     }
 }
 impl lambertian{
     pub fn new(al:&Vec3)->Self{
-        Self{albedo:(*al).clone(),}
+        Self{albedo:Some(Arc::new(solid_color::new((*al).clone())))}
     }
+    pub fn new1(a:Option<Arc<dyn texture>>)->Self{Self{albedo:a}}
 }
 #[derive(Clone, Debug, PartialEq)]
 pub struct metal{

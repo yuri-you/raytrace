@@ -9,6 +9,7 @@ mod aabb;
 mod moving_sphere;
 mod material;
 mod bvh;
+mod texture;
 mod camera;
 use image::{ImageBuffer, RgbImage};
 use indicatif::ProgressBar;
@@ -28,12 +29,17 @@ pub use material::metal;
 pub use material::Material;
 pub use material::dielectric;
 pub use moving_sphere::Moving_Sphere;
+pub use texture::checker_texture;
 use std::sync::Arc;
 pub fn random_scene()->HitList {
+    /*auto checker = make_shared<checker_texture>(color(0.2, 0.3, 0.1), color(0.9, 0.9, 0.9));
+    world.add(make_shared<sphere>(point3(0,-1000,0), 1000, make_shared<lambertian>(checker)));*/
     let mut world=HitList::new();
-    let ground_material = lambertian::new(&Vec3::new(0.5, 0.5, 0.5));
-    let sph1=Sphere::new(Vec3::new(0.0, -1000.0, 0.0),1000.0,Some(Arc::new(ground_material)));
+    let checker1 = checker_texture::new2(Vec3::new(0.2, 0.3, 0.1),Vec3::new(0.9, 0.9, 0.9));
+    let lam=lambertian::new1(Some(Arc::new(checker1)));
+    let sph1=Sphere::new(Vec3::new(0.0,-1000.0,0.0), 1000.0, Some(Arc::new(lam)));
     world.add(Some(Arc::new(sph1)));
+
     let mut a=-11;
     let mut b=-11;
     while a<11 {
