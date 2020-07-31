@@ -1,7 +1,34 @@
 use crate::vec3::Vec3;
 use std::sync::Arc;
+use crate::perlin::Perlin;
 pub trait texture {
     fn value(&self,u:f64, v:f64,p:&Vec3)->Vec3;
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct noise_texture{
+    noise:Perlin,
+    scale:f64,
+}
+impl noise_texture{
+    pub fn new()->Self{
+        Self{
+            noise:Perlin::new(),
+            scale:0.0,
+        }
+    }
+
+    pub fn new1(scale:f64)->Self{
+        Self{
+            noise:Perlin::new(),
+            scale,
+        }
+    }
+}
+impl texture for noise_texture{
+    fn value(&self,u: f64, v: f64, p: &Vec3)->Vec3{
+        Vec3::new(1.0,1.0,1.0)*(self.noise.noise(&(self.scale*(*p).clone())))
+    }
 }
 #[derive(Clone, Debug, PartialEq)]
 pub struct solid_color{

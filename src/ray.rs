@@ -16,7 +16,7 @@ impl Ray{
             time:0.0,
         }
     }
-    pub fn at(self,t:f64)->Vec3{
-        return self.position+self.direction*t;
+    pub fn at(&self,t:f64)->Vec3{
+        return self.position.clone()+self.direction.clone()*t;
     }
 }

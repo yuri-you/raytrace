@@ -43,9 +43,9 @@ impl Camera{
             }
     }
     pub fn get_ray(&self,s:f64,t:f64)->Ray{
-        let rd = (*self).lens_radius.clone() * random_in_unit_disk();
-        let offset = (*self).u.clone() * rd.x.clone() + (*self).v.clone() * rd.y.clone();
-        Ray::new((*self).clone().origin+offset.clone(), (*self).clone().lower_left_corner + s * (*self).clone().horizontal + t * (*self).clone().vertical - (*self).clone().origin-offset.clone(),
-        rand_range((*self).t0.clone(),(*self).t1.clone()))
+        let rd = self.lens_radius.clone() * random_in_unit_disk();
+        let offset = self.u.clone() * rd.x.clone() + self.v.clone() * rd.y.clone();
+        Ray::new(self.origin.clone()+offset.clone(), self.lower_left_corner.clone() + s * self.horizontal.clone() + t * self.vertical.clone() - self.origin.clone()-offset.clone(),
+        rand_range(self.t0,self.t1))
     }
 }

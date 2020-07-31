@@ -49,7 +49,7 @@ impl HitList{
             ptr:Vec::new(),
         }
     }
-    pub fn hit(&mut self,r:&Ray,t_min:f64, t_max:f64, rec:&mut HitRecord)->bool{
+    pub fn hit(& self,r:&Ray,t_min:f64, t_max:f64, rec:&mut HitRecord)->bool{
         let mut temp_rec=HitRecord::new();
         let mut hit_anything = false;
         let mut closest_so_far = t_max;

@@ -31,9 +31,9 @@ pub struct AABB {
         let mut tmax=tax;
         let tmp=(*self).clone();
         while a<3 {
-            let invD = 1.0/ (*r).clone().direction.in_at(a);
-        let mut t0 = (tmp.min.in_at(a) - (*r).clone().position.in_at(a)) * invD;
-        let mut t1 = (tmp.max.in_at(a) - (*r).clone().position.in_at(a)) * invD;
+        let invD = 1.0/ r.direction.in_at(a);
+        let mut t0 = (tmp.min.in_at(a) - r.position.in_at(a)) * invD;
+        let mut t1 = (tmp.max.in_at(a) - r.position.in_at(a)) * invD;
         if invD < 0.0{
             swap(&mut t0, &mut t1);
         }
@@ -48,13 +48,13 @@ pub struct AABB {
      }
  }
 pub fn surrounding_box(box0:&AABB, box1:&AABB)->AABB {
-    let small=Vec3::new(min((*box0).clone().min.x, (*box1).clone().min.x),
-    min((*box0).clone().min.y, (*box1).clone().min.y),
-    min((*box0).clone().min.z, (*box1).clone().min.z));
+    let small=Vec3::new(min(box0.min.x.clone(), box1.min.x.clone()),
+    min(box0.min.y.clone(), box1.min.y.clone()),
+    min(box0.min.z.clone(), box1.min.z.clone()));
 
-    let big=Vec3::new(max((*box0).clone().max.x, (*box1).clone().max.x),
-    max((*box0).clone().max.y, (*box1).clone().max.y),
-    max((*box0).clone().max.z, (*box1).clone().max.z));
+    let big=Vec3::new(max(box0.max.x.clone(), box1.max.x.clone()),
+    max(box0.max.y.clone(), box1.max.y.clone()),
+    max(box0.max.z.clone(), box1.max.z.clone()));
 
     return AABB::new(&small, &big);
 }

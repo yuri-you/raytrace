@@ -12,12 +12,12 @@ pub struct Vec3 {
     pub z: f64,
 }
 pub fn reflect(v:&Vec3, n:&Vec3) ->Vec3{
-    return (*v).clone() - 2.0*((*v).clone()*(*n).clone())*((*n).clone());
+    return v.clone() - 2.0*(v.clone()*n.clone())*(n.clone());
 }
 pub fn refract(uv:&Vec3, n:&Vec3, etai_over_etat:f64)->Vec3 {
-    let cos_theta = (-(*uv).clone())*(*n).clone();
-    let r_out_perp =  etai_over_etat * ((*uv).clone() + cos_theta*(*n).clone());
-    let r_out_parallel = -(1.0 - r_out_perp.clone().squared_length()).abs().sqrt() * (*n).clone();
+    let cos_theta = (-uv.clone())*n.clone();
+    let r_out_perp =  etai_over_etat * (uv.clone() + cos_theta*n.clone());
+    let r_out_parallel = -(1.0 - r_out_perp.squared_length()).abs().sqrt() * n.clone();
     return r_out_perp + r_out_parallel;
 }
 pub fn random_in_unit_sphere()->Vec3 {
@@ -28,7 +28,7 @@ pub fn random_in_unit_sphere()->Vec3 {
 }
 pub fn random_in_hemisphere(normal:&Vec3)->Vec3 {
     let in_unit_sphere = random_in_unit_sphere();
-    if in_unit_sphere.clone()* (*normal).clone() > 0.0{ // In the same hemisphere as the normal
+    if in_unit_sphere.clone()* normal.clone() > 0.0{ // In the same hemisphere as the normal
         return in_unit_sphere;
     }
     else{
@@ -71,7 +71,7 @@ impl Vec3 {
         }
     }
     pub fn in_at(&self,a:i32)->f64{
-        let b=(*self).clone();
+        let b=self.clone();
         if a==0{return b.x;}
         else if a==1{return b.y;}
         else {return b.z};

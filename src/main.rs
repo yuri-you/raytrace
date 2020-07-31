@@ -11,6 +11,7 @@ mod material;
 mod bvh;
 mod texture;
 mod camera;
+mod perlin;
 use image::{ImageBuffer, RgbImage};
 use indicatif::ProgressBar;
 pub use vec3::Vec3;
@@ -30,10 +31,10 @@ pub use material::Material;
 pub use material::dielectric;
 pub use moving_sphere::Moving_Sphere;
 pub use texture::checker_texture;
+pub use texture::noise_texture;
 use std::sync::Arc;
 pub fn random_scene()->HitList {
-    /*auto checker = make_shared<checker_texture>(color(0.2, 0.3, 0.1), color(0.9, 0.9, 0.9));
-    world.add(make_shared<sphere>(point3(0,-1000,0), 1000, make_shared<lambertian>(checker)));*/
+
     let mut world=HitList::new();
     let checker1 = checker_texture::new2(Vec3::new(0.2, 0.3, 0.1),Vec3::new(0.9, 0.9, 0.9));
     let lam=lambertian::new1(Some(Arc::new(checker1)));
@@ -55,7 +56,7 @@ pub fn random_scene()->HitList {
                     let center2 = center.clone() + Vec3::new(0.0, rand_range(0.0,0.5), 0.0);
                     // world.add(make_shared<moving_sphere>(
                     //     center, center2, 0.0, 1.0, 0.2, sphere_material));
-                    let sph1=Moving_Sphere::new(center.clone(),center2.clone(),0.0,1.0, 0.2,Some(Arc::new(sphere_material)));
+                    let sph1=Moving_Sphere::new(center.clone(),center2,0.0,1.0, 0.2,Some(Arc::new(sphere_material)));
                     world.add(Some(Arc::new(sph1)));
                 } else if choose_mat < 0.95 {
                     // metal
@@ -96,47 +97,59 @@ fn main() {
     
     // let x = Vec3::new(1.0, 1.0, 1.0);
     // println!("{:?}", x);
-    let mut img: RgbImage = ImageBuffer::new(1024, 512);
-    let aspect_ratio = 2.0;
-    let image_width = 1024;
-    let image_height=512;
-    let bar = ProgressBar::new(1024);
-    let sample_per_pixel:i32=100;
-    let max_depth=50;
+    let aspect_ratio=16.0/9.0;
+    let image_width=400;
+    let image_height=((image_width as f64)/aspect_ratio)as u32;
+    let sample_per_pixel:i32=50;
+    let mut img: RgbImage = ImageBuffer::new(image_width, image_height);
+    let bar = ProgressBar::new(image_width as u64);
+    let maxdepth=10;
     //initialize
 
-
-    let mut world:HitList=random_scene();  
-    // let material_ground=lambertian::new(&Vec3::new(0.8, 0.8, 0.0));
-    // let material_center=lambertian::new(&Vec3::new(0.1, 0.2, 0.5));
-    // let material_left= dielectric::new(1.5);
-    // let material_right = metal::new(&Vec3::new(0.8, 0.6, 0.2),0.0);
-    // world.add(&Sphere::new(Vec3::new(0.0, -100.5, -1.0), 100.0,Some(Arc::new(material_ground))));
-    // world.add(&Sphere::new(Vec3::new( 0.0,   0.0, -1.0), 0.5,Some(Arc::new(material_center))));
-    // world.add(&Sphere::new(Vec3::new(-1.0,    0.0, -1.0), 0.5,Some(Arc::new(material_left.clone()))));
-    // world.add(&Sphere::new(Vec3::new(-1.0,    0.0, -1.0), -0.4,Some(Arc::new(material_left))));
-    // world.add(&Sphere::new(Vec3::new(1.0,    0.0, -1.0), 0.5,Some(Arc::new(material_right))));
-    //world
-    let lookfrom=Vec3::new(13.0,2.0,3.0);
-    let lookat=Vec3::new(0.0,0.0,0.0);
+    let mut world:HitList;
+    let mut lookfrom:Vec3;
+    let mut lookat:Vec3;
+    let mut vfov:f64;
+    let mut aperture=0.0;
+    let a=0;
+    if a==1{
+        world=random_scene();
+        lookfrom = Vec3::new(13.0,2.0,3.0);
+        lookat = Vec3::new(0.0,0.0,0.0);
+        vfov = 20.0;
+        aperture = 0.1;
+    }
+    else if a==2{
+        world = two_spheres();
+        lookfrom = Vec3::new(13.0,2.0,3.0);
+        lookat = Vec3::new(0.0,0.0,0.0);
+        vfov = 20.0;
+    }
+    else{
+        world = two_perlin_spheres();
+        lookfrom = Vec3::new(13.0,2.0,3.0);
+        lookat = Vec3::new(0.0,0.0,0.0);
+        vfov = 20.0;
+    }
     let vup=Vec3::new(0.0,1.0,0.0);
     let dist_to_focus = 10.0;
-    let aperture = 0.1;
-    
-    let cam=Camera::new(lookfrom, lookat, vup, 20.0, aspect_ratio, aperture, dist_to_focus,0.0,1.0);
+    let cam=Camera::new(lookfrom, lookat, vup, vfov, aspect_ratio, aperture, dist_to_focus,0.0,1.0);
+    //camera
+
     let mut u:f64;
     let mut v:f64;
-    // let mut random=Rand::new(14846);
-    for x in 0..1024 {
-        for y in 0..512 {
+    for x in 0..image_width {
+        for y in 0..image_height {
             let pixel = img.get_pixel_mut(x, y);
             let mut color1=Vec3::new(0.0,0.0,0.0);
             let mut z=0;
             while z<sample_per_pixel{
-            u=(((x as f64)+rand_double())as i64)as f64;
-            v=((((511-y) as f64)+rand_double())as i64)as f64;
+            let mut q:f64=rand_double();
+            u=((x as f64)+q)/((image_width-1)as f64);
+            q=rand_double();
+            v=(((image_height-1-y) as f64)+q)/((image_height-1)as f64);
             let rays=cam.get_ray(u, v);
-            color1+=ray_color(&rays,&mut world,max_depth);
+            color1+=ray_color(&rays,&world,maxdepth);
             z+=1;
             }
             let color=write_color(color1,sample_per_pixel);
@@ -144,8 +157,28 @@ fn main() {
         }
         bar.inc(1);
     }
+    //picture
 
-    img.save("output/test2.png").unwrap();
+
+    img.save("output/test5.png").unwrap();
     bar.finish();
 }
-    //
+
+fn two_spheres()->HitList {
+    let mut objects=HitList::new();
+
+    let checker = Arc::new(checker_texture::new2(Vec3::new(0.2, 0.3, 0.1), Vec3::new(0.9, 0.9, 0.9)));
+
+    objects.add(Some(Arc::new(Sphere::new(Vec3::new(0.0,-10.0, 0.0), 10.0, Some(Arc::new(lambertian::new1(Some(checker.clone()))))))));
+    objects.add(Some(Arc::new(Sphere::new(Vec3::new(0.0,10.0, 0.0), 10.0, Some(Arc::new(lambertian::new1(Some(checker))))))));
+
+    return objects;
+}
+fn two_perlin_spheres()->HitList {
+    let mut objects=HitList::new();
+    let pertext =Arc::new(noise_texture::new1(4.0));
+    objects.add(Some(Arc::new(Sphere::new(Vec3::new(0.0,-1000.0,0.0), 1000.0, Some(Arc::new(lambertian::new1(Some(pertext.clone()))))))));
+    objects.add(Some(Arc::new(Sphere::new(Vec3::new(0.0, 2.0, 0.0), 2.0, Some(Arc::new(lambertian::new1(Some(pertext))))))));
+
+    return objects;
+}
